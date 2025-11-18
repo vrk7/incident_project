@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Sequence, Tuple
 
 from dotenv import load_dotenv
+from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 
 
@@ -103,15 +105,15 @@ def build_llm(
     return ChatOpenAI(**client_kwargs)
 
 
-def extract_json_block(text: str) -> Dict[str, Any]:
-    """Extract the first JSON object found inside a string."""
+# def extract_json_block(text: str) -> Dict[str, Any]:
+#     """Extract the first JSON object found inside a string."""
 
-    start = text.find("{")
-    end = text.rfind("}")
-    if start == -1 or end == -1 or start >= end:
-        raise ValueError("Could not locate JSON object in LLM response.")
-    json_text = text[start : end + 1]
-    return json.loads(json_text)
+#     start = text.find("{")
+#     end = text.rfind("}")
+#     if start == -1 or end == -1 or start >= end:
+#         raise ValueError("Could not locate JSON object in LLM response.")
+#     json_text = text[start : end + 1]
+#     return json.loads(json_text)
 
 
 def truncate_text(text: str, limit: int | None) -> Tuple[str, bool]:
@@ -234,6 +236,7 @@ def run_analysis(
 ) -> Dict[str, Any]:
     """Use the LLM to analyze artifacts and return structured insights."""
 
+    parser = JsonOutputParser()
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", SYSTEM_PROMPT),
@@ -244,23 +247,38 @@ def run_analysis(
                     "Chat transcript:\n{chat}\n\n"
                     "Ticket description:\n{ticket}\n\n"
                     "Timeline hints (heuristic):\n{timeline_hints}\n\n"
-                    "Summarize the incident strictly using JSON as specified earlier."
+                    "Summarize the incident strictly using JSON as specified earlier.\n"
+                    "{format_instructions}"
                 ),
             ),
         ]
     )
 
-    llm = build_llm(model=model, api_key=api_key, base_url=api_base)
-    response = (prompt | llm).invoke(
-        {
-            "logs": logs,
-            "chat": chat,
-            "ticket": ticket,
-            "timeline_hints": json.dumps(timeline_hints or [], ensure_ascii=False),
-        }
-    )
-    return extract_json_block(response.content)
 
+    prompt = prompt.partial(format_instructions=parser.get_format_instructions())
+
+    llm = build_llm(model=model, api_key=api_key, base_url=api_base)
+    # response = (prompt | llm).invoke(
+    #     {
+    #         "logs": logs,
+    #         "chat": chat,
+    #         "ticket": ticket,
+    #         "timeline_hints": json.dumps(timeline_hints or [], ensure_ascii=False),
+    #     }
+    chain = (
+        RunnableLambda(
+            lambda _: {
+                "logs": logs,
+                "chat": chat,
+                "ticket": ticket,
+                "timeline_hints": json.dumps(timeline_hints or [], ensure_ascii=False),
+            }
+        )
+        | prompt
+        | llm
+        | parser
+    )
+    return chain.invoke({})
 
 def build_postmortem(data: Dict[str, Any]) -> str:
     """Create the Markdown postmortem document from structured data."""
