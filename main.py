@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Sequence, Tuple
 
+from dotenv import load_dotenv
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
@@ -306,6 +307,17 @@ def read_file(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def load_env_from_file(path: Path | None) -> bool:
+    """Load environment variables from a .env-style file when available."""
+
+    if not path:
+        return False
+    if not path.exists():
+        return False
+    load_dotenv(dotenv_path=path)
+    return True
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Configure the CLI arguments."""
 
@@ -346,11 +358,26 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default="OPENAI_API_BASE",
         help="Environment variable that stores a custom base URL (optional)",
     )
+    parser.add_argument(
+        "--env-file",
+        type=Path,
+        default=Path(".env"),
+        help="Path to an env file containing API credentials (default: .env)",
+    )
+    parser.add_argument(
+        "--skip-env-file",
+        action="store_true",
+        help="Disable env file loading even if the file exists",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
+
+    env_loaded = False
+    if not args.skip_env_file:
+        env_loaded = load_env_from_file(args.env_file)
 
     raw_logs = read_file(args.logs)
     raw_chat = read_file(args.chat)
@@ -412,6 +439,9 @@ def main(argv: Sequence[str] | None = None) -> None:
             f"({format_duration(duration)})."
         )
     print("".join(summary_parts))
+
+    if env_loaded:
+        print(f"Loaded environment variables from {args.env_file}.")
 
     truncated_sections = [
         name
