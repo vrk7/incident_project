@@ -14,7 +14,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 
-SYSTEM_PROMPT = """You are an SRE that writes concise, structured incident postmortems.
+_SYSTEM_PROMPT_TEMPLATE = """You are an SRE that writes concise, structured incident postmortems.
 Given raw logs, chat transcripts, and ticket descriptions, distill the most
 important data. Always respond with valid JSON that matches this schema:
 {
@@ -40,6 +40,12 @@ important data. Always respond with valid JSON that matches this schema:
 }
 Keep answers practical and consistent with SRE best practices.
 """
+
+# LangChain prompt templates treat braces as placeholders, so escape them inside the
+# static system prompt that only contains illustrative JSON.
+SYSTEM_PROMPT = (
+    _SYSTEM_PROMPT_TEMPLATE.replace("{", "{{").replace("}", "}}")
+)
 
 TIMESTAMP_REGEXES: Tuple[re.Pattern[str], ...] = (
     re.compile(r"\b\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:?\d{2})?\b"),
