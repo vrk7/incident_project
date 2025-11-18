@@ -1,0 +1,5 @@
+08:13 AM  @alice  Seeing a spike in checkout failures ~12% in the last 5 minutes.
+08:14 AM  @bob    Investigating payment-service pods, one node looks stuck.
+08:15 AM  @carol  Error surfaced after a config push. Rolling back now.
+08:19 AM  @bob    Rollback finished. Monitoring metrics for stability.
+08:24 AM  @alice  Error rate back to baseline. Incident channel can stand down.

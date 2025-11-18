@@ -1,0 +1,6 @@
+Title: Checkout failures due to payment-service regression
+Reporter: On-call SRE
+Description:
+- Customers unable to complete card payments; UI shows "payment timed out".
+- Started around 08:10 UTC after config deploy 4512.
+- Expectation is full RCA and mitigation plan.

@@ -1,0 +1,5 @@
+[2024-05-10 08:12:01] INFO web-1 Received request GET /api/orders/4512
+[2024-05-10 08:12:02] WARN db-2 Query latency 1850ms exceeding threshold
+[2024-05-10 08:12:04] ERROR web-1 Upstream timeout contacting payment-service
+[2024-05-10 08:12:09] INFO orchestrator Initiating rolling restart for payment-service
+[2024-05-10 08:12:13] INFO orchestrator Restart complete, health checks passing
