@@ -29,7 +29,7 @@ pnpm run setup # runs `python -m pip install -r requirements.txt`
 2. Run the CLI:
 
 ```bash
-python main.py --logs logs.txt --chat slack.txt --ticket ticket.txt
+python3 main.py --logs logs.txt --chat slack.txt --ticket ticket.txt
 # or
 pnpm run postmortem -- --logs logs.txt --chat slack.txt --ticket ticket.txt
 ```
