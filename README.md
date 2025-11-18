@@ -7,13 +7,19 @@ postmortem.
 ## Requirements
 
 - Python 3.10+
+- Node.js 18+ (so you can drive the CLI via `npm` or `pnpm` scripts)
 - Dependencies listed in `requirements.txt`
 - An LLM API key available via an environment variable (defaults to `OPENAI_API_KEY`)
 
-Install the dependencies:
+Install the dependencies with whichever tooling you prefer:
 
 ```bash
+# Python-only workflow
 pip install -r requirements.txt
+
+# or use the provided Node scripts
+pnpm install   # or `npm install` (no JS deps, but sets up lock files)
+pnpm run setup # runs `python -m pip install -r requirements.txt`
 ```
 
 ## Usage
@@ -24,6 +30,8 @@ pip install -r requirements.txt
 
 ```bash
 python main.py --logs logs.txt --chat slack.txt --ticket ticket.txt
+# or
+pnpm run postmortem -- --logs logs.txt --chat slack.txt --ticket ticket.txt
 ```
 
 Optional flags:
@@ -37,6 +45,8 @@ Optional flags:
 - `--api-key-var`: name of the env var that stores the API key (defaults to `OPENAI_API_KEY`).
 - `--api-base`: override the OpenAI-compatible base URL directly.
 - `--api-base-var`: name of the env var that stores a custom base URL (defaults to `OPENAI_API_BASE`).
+- `--env-file`: path to a `.env`-style file that the CLI should load before resolving variables (defaults to `.env`).
+- `--skip-env-file`: disable `.env` loading entirely for highly locked-down environments.
 
 After execution you will see a short console summary, and the complete draft
 postmortem will be saved to `postmortem.md`.
@@ -48,6 +58,12 @@ postmortem will be saved to `postmortem.md`.
   Markdown report, and prints a quick summary to the console.
 - `requirements.txt`: the tiny list of Python libraries you need to install to
   run the tool (LangChain core + the OpenAI chat wrapper).
+- `package.json`: lets you call the assistant with familiar `npm run`/`pnpm run`
+  scripts (for local dev shells or CI pipelines) and documents the supported
+  Node version.
+- `.env.example`: template that shows which environment variables the CLI will
+  load automatically. Copy it to `.env`, customize the secrets, and you are
+  ready to go.
 - `README.md`: the document you are reading now—it explains how to install,
   run, and extend the assistant.
 
@@ -63,7 +79,10 @@ deployment you are integrating with:
 
 Because the assistant lets you pick which variables to use, teams can maintain
 environment-specific `.env` files (for prod vs. staging) or inject secrets from
-their orchestrator without modifying the code.
+their orchestrator without modifying the code. The CLI attempts to load `.env`
+from the working directory (or whichever file you pass via `--env-file`) before
+inspecting the live environment, so developers can keep secrets outside of shell
+history yet still drive the tool with a single `pnpm run postmortem -- ...`.
 
 ## How it works
 
@@ -103,7 +122,6 @@ To plug the assistant into a real-time incident pipeline:
 4. (Optional) Keep the generated JSON payload (before Markdown conversion) to
    feed downstream analytics—pass `--json-output analysis.json` to save it, or
    forward the file to your observability stack.
-
 Because everything is local and file-based, embedding this command into chatops
 slash-commands or CI pipelines only requires mounting the three text files and
 passing their paths to `python main.py`.
