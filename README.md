@@ -1,4 +1,4 @@
-# Incident & Outage Postmortem Assistant
+# Incident Postmortem Assistant
 
 A small LangChain-powered command-line tool that turns raw incident artifacts
 (logs, chat transcripts, and ticket descriptions) into a structured Markdown
