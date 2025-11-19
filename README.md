@@ -21,6 +21,14 @@ pip install -r requirements.txt
 pnpm install   # or `npm install` (no JS deps, but sets up lock files)
 pnpm run setup # runs `python -m pip install -r requirements.txt`
 ```
+Before running the CLI, copy the sample env file and drop in your API key:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` (or set real environment variables) with the credentials for the
+LLM endpoint you plan to hit.
 
 ## Usage
 
@@ -29,9 +37,14 @@ pnpm run setup # runs `python -m pip install -r requirements.txt`
 2. Run the CLI:
 
 ```bash
+# Plain Python invocation
 python3 main.py --logs logs.txt --chat slack.txt --ticket ticket.txt
-# or
+
+# Same thing via the package scripts
 pnpm run postmortem -- --logs logs.txt --chat slack.txt --ticket ticket.txt
+
+# Want the structured JSON alongside Markdown? Use the helper script
+pnpm run postmortem:json -- --logs logs.txt --chat slack.txt --ticket ticket.txt
 ```
 
 Optional flags:
